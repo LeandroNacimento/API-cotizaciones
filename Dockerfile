@@ -29,7 +29,7 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 # Caddy sirve /public y pasa PHP a FPM
 COPY <<'CADDY' /etc/caddy/Caddyfile
-:8080
+:{$PORT}
 root * /var/www/html/public
 encode gzip
 php_fastcgi 127.0.0.1:9000
