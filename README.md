@@ -98,9 +98,15 @@ php artisan serve
 
 ## Endpoints ejemplo
 
-GET /api/convertir?valor=100&tipo=blue
-GET /api/promedio-mensual?tipo=blue&anio=2025&mes=9
-GET /api/historial?tipo=blue&anio=2025&mes=9
+- `GET /api/convertir?valor=100&tipo=blue`
+
+- `GET /api/promedio-mensual?tipo=blue&anio=2025&mes=9&valor=venta`  
+  Devuelve solo el promedio de **venta** (o `compra` si lo indicás).
+
+- `GET /api/promedio-mensual?tipo=blue&anio=2025&mes=9`  
+  Si **no** enviás `valor`, devuelve **ambos** promedios: `compra` y `venta`.
+
+- `GET /api/historial?tipo=blue&anio=2025&mes=9`
 
 ## Troubleshooting
 

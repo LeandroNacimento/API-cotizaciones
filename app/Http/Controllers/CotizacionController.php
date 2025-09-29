@@ -75,46 +75,66 @@ public function convertir(Request $request)
         ]);
     }
 
-    // === NUEVO: Promedio mensual ===
+    
     // GET /api/promedio-mensual?tipo=blue&valor=venta&anio=2025&mes=9
+    // GET /api/promedio-mensual?tipo=blue&anio=2025&mes=9 (muestra compra y venta)
     public function promedioMensual(Request $request)
     {
-        $validated = $request->validate([
-            'tipo'  => ['required','string'],
-            'valor' => ['required','in:compra,venta'],
-            'anio'  => ['required','integer','min:2000','max:2100'],
-            'mes'   => ['required','integer','min:1','max:12'],
-        ]);
+    $validated = $request->validate([
+        'tipo'  => ['required','string'],
+        'valor' => ['nullable','in:compra,venta'], // <-- ahora opcional
+        'anio'  => ['required','integer','min:2000','max:2100'],
+        'mes'   => ['required','integer','min:1','max:12'],
+    ]);
 
-        $tipo  = strtolower($validated['tipo']);
-        $campo = $validated['valor']; // compra | venta
-        $anio  = (int) $validated['anio'];
-        $mes   = (int) $validated['mes'];
+    $tipo = strtolower($validated['tipo']);
+    $anio = (int) $validated['anio'];
+    $mes  = (int) $validated['mes'];
 
-        $promedio = Cotizacion::query()
-            ->tipo($tipo)
-            ->periodo($anio, $mes)
-            ->whereNotNull($campo)
-            ->avg($campo);
+    $base = Cotizacion::query()
+        ->tipo($tipo)               // scope tipo($q, $tipo)
+        ->periodo($anio, $mes);     // scope periodo($q, $anio, $mes)
 
-        $count = Cotizacion::query()
-            ->tipo($tipo)
-            ->periodo($anio, $mes)
-            ->whereNotNull($campo)
-            ->count();
+    $desde = Carbon::create($anio, $mes, 1)->toDateString();
+    $hasta = Carbon::create($anio, $mes, 1)->endOfMonth()->toDateString();
+
+    // Caso 1: el usuario especificó 'valor' (compra|venta)
+    if (!empty($validated['valor'])) {
+        $campo     = $validated['valor']; // 'compra' o 'venta'
+        $promedio  = (clone $base)->whereNotNull($campo)->avg($campo);
+        $muestras  = (clone $base)->whereNotNull($campo)->count();
 
         return response()->json([
             'tipo'     => $tipo,
             'valor'    => $campo,
             'anio'     => $anio,
             'mes'      => $mes,
-            'muestras' => $count,
-            'promedio' => $promedio ? round((float)$promedio, 2) : null,
-            'rango'    => [
-                'desde' => Carbon::create($anio, $mes, 1)->toDateString(),
-                'hasta' => Carbon::create($anio, $mes, 1)->endOfMonth()->toDateString(),
-            ],
+            'muestras' => $muestras,
+            'promedio' => $promedio ? round((float) $promedio, 2) : null,
+            'rango'    => ['desde' => $desde, 'hasta' => $hasta],
         ]);
+    }
+
+    // Caso 2: no especificó 'valor' → devolver ambos
+    $avgCompra   = (clone $base)->whereNotNull('compra')->avg('compra');
+    $cntCompra   = (clone $base)->whereNotNull('compra')->count();
+    $avgVenta    = (clone $base)->whereNotNull('venta')->avg('venta');
+    $cntVenta    = (clone $base)->whereNotNull('venta')->count();
+
+    return response()->json([
+        'tipo'  => $tipo,
+        'anio'  => $anio,
+        'mes'   => $mes,
+        'rango' => ['desde' => $desde, 'hasta' => $hasta],
+        'compra' => [
+            'muestras' => $cntCompra,
+            'promedio' => $avgCompra ? round((float) $avgCompra, 2) : null,
+        ],
+        'venta'  => [
+            'muestras' => $cntVenta,
+            'promedio' => $avgVenta ? round((float) $avgVenta, 2) : null,
+        ],
+    ]);
     }
 
     // === NUEVO: Historial por mes y tipo (lista de puntos del mes) ===
