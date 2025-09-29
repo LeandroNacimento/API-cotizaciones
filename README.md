@@ -96,6 +96,10 @@ composer install
 php artisan migrate
 php artisan serve
 
+## URL del proyecto
+
+https://sick-darci-paralatarea-deb4a579.koyeb.app/
+
 ## Endpoints ejemplo
 
 - `GET /api/convertir?valor=100&tipo=blue`
