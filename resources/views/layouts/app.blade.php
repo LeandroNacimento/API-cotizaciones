@@ -12,6 +12,7 @@
         {{ $slot }}
     </main>
     @livewireScripts
+    @stack('scripts')
     <script defer src="//unpkg.com/alpinejs"></script>
 </body>
 </html>

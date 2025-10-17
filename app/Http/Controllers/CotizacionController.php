@@ -24,7 +24,7 @@ class CotizacionController extends Controller
         $valorUSD = (float) $validated['valor'];
         $tipo = strtolower($validated['tipo'] ?? 'oficial');
 
-        $tiposPermitidos = ['oficial', 'blue', 'bolsa', 'contadoconliqui', 'turista', 'mayorista'];
+        $tiposPermitidos = ['oficial', 'blue', 'bolsa', 'ccl', 'tarjeta', 'mayorista', 'cripto'];
         if (!in_array($tipo, $tiposPermitidos, true)) {
             return response()->json([
                 'error' => "Tipo inválido. Use: " . implode(', ', $tiposPermitidos)

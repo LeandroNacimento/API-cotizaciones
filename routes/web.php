@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Livewire\DashboardCotizaciones;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', DashboardCotizaciones::class)->name('dashboard');
