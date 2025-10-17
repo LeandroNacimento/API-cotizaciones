@@ -6,6 +6,7 @@
     <title>{{ isset($title) ? $title : 'App' }}</title>
     @vite(['resources/css/app.css','resources/js/app.js'])
     @livewireStyles
+    @stack('styles')
 </head>
 <body class="h-full bg-gray-50 dark:bg-gray-900">
     <main>
