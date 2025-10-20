@@ -51,29 +51,47 @@ class Cotizar extends Component
         $this->error = null;
     }
 
-    public function cotizarViaApi(CotizacionService $service): void
-    {
-        $this->resetResultado();
+   public function cotizarViaApi(CotizacionService $service): void
+{
+    $this->resetResultado();
+    $this->error = null;
 
-        $monto = str_replace(',', '.', (string)$this->monto);
-        if (!is_numeric($monto) || !in_array($this->tipo, $this->tiposPermitidos, true)) {
-            $this->error = 'Ingresá un monto válido y un tipo correcto.';
-            return;
-        }
+    // Validaciones claras
+    $raw = (string)($this->monto ?? '');
+    $raw = trim($raw);
 
-        $res = $service->convertir((float)$monto, $this->tipo);
-
-        if (!($res['ok'] ?? false)) {
-            $this->error = $res['error'] ?? 'Error inesperado.';
-            return;
-        }
-
-        $this->compra    = $res['compra'];
-        $this->venta     = $res['venta'];
-        $this->resultado = $res['resultado_en_pesos'];
-        $this->usada     = $res['cotizacion_usada'];
-        $this->fecha     = now()->format('d/m/Y');
+    if ($raw === '') {
+        $this->error = 'Ingresá un monto en USD para cotizar.';
+        return;
     }
+
+    // Acepta coma o punto
+    $monto = str_replace(',', '.', $raw);
+    if (!is_numeric($monto)) {
+        $this->error = 'El monto debe ser numérico. Ej: 150.50';
+        return;
+    }
+
+    if (!in_array($this->tipo, $this->tiposPermitidos, true)) {
+        $this->error = 'Seleccioná un tipo de cambio válido.';
+        return;
+    }
+
+    // Lógica original
+    $res = $service->convertir((float)$monto, $this->tipo);
+
+    if (!($res['ok'] ?? false)) {
+        $this->error = $res['error'] ?? 'Error inesperado.';
+        return;
+    }
+
+    $this->compra    = $res['compra'];
+    $this->venta     = $res['venta'];
+    $this->resultado = $res['resultado_en_pesos'];
+    $this->usada     = $res['cotizacion_usada'];
+    $this->fecha     = now()->format('d/m/Y');
+}
+
 
     public function render()
     {
