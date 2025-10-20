@@ -135,6 +135,63 @@
         </div>
     </div>
 
+@php
+    // Solo construir URLs si hay resultado
+    $showCalendarBtns = !is_null($resultado);
+
+    if ($showCalendarBtns) {
+        $tz = config('app.timezone', 'UTC');
+
+        // Arranque: dentro de 10 minutos, duración 15m
+        $start = now($tz)->addMinutes(10);
+        $end   = (clone $start)->addMinutes(15);
+
+        // Google Calendar requiere fechas UTC formato YYYYMMDDTHHMMSSZ
+        $gStart = $start->copy()->utc()->format('Ymd\THis\Z');
+        $gEnd   = $end->copy()->utc()->format('Ymd\THis\Z');
+
+        $titulo = 'Revisar cotización '.$labels[$tipo] ?? ucfirst($tipo);
+        $detalle = 'Abrir la app y verificar valores de compra/venta.';
+
+        $gcalUrl = 'https://calendar.google.com/calendar/render?' . http_build_query([
+            'action'  => 'TEMPLATE',
+            'text'    => $titulo,
+            'details' => $detalle,
+            'dates'   => "{$gStart}/{$gEnd}",
+        ]);
+
+        // Enlace a ICS (nuestro endpoint)
+        $icsUrl = route('calendar.ics', [
+            'title'       => $titulo,
+            'description' => $detalle,
+            'dtstart'     => $start->toIso8601String(), // respeta TZ local
+            'duration'    => 15,
+            'tz'          => $tz,
+            // 'rrule'    => 'FREQ=DAILY;BYHOUR=10;BYMINUTE=0;BYSECOND=0' // si querés recurrente, descomentar
+        ], false);
+    }
+@endphp
+
+@if($showCalendarBtns)
+    <div class="mt-6 flex flex-wrap gap-3">
+        <a href="{{ $gcalUrl }}" target="_blank" rel="noopener"
+           class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium
+                  bg-emerald-600 text-white hover:bg-emerald-700 focus:outline-none
+                  focus:ring-2 focus:ring-emerald-500/60 focus:ring-offset-2 dark:focus:ring-offset-gray-950">
+            Añadir a Google Calendar
+        </a>
+
+        <a href="{{ $icsUrl }}"
+           class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium
+                  border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900
+                  text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500/60">
+            Descargar .ics
+        </a>
+    </div>
+@endif
+
+
     {{-- Overlay de carga sutil --}}
     <div wire:loading.delay.short class="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"></div>
 </div>
